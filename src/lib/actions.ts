@@ -4,7 +4,7 @@ import { signIn } from "@/auth";
 import { AuthError, CredentialsSignin } from "next-auth";
 import { revalidatePath } from "next/cache";
 
-type AuthenticationResult = { ok: true } | { ok: false, msg: string };
+export type AuthenticationResult = { ok: true } | { ok: false, msg: string };
 
 const authenticate = async (_prevState: AuthenticationResult | null, formData: FormData): Promise<AuthenticationResult> => {
   try {

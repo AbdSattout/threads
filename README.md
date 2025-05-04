@@ -11,8 +11,9 @@ A social media app built with Next.js.
 ## TODO
 ### Week 1
 - [x] Scaffold the app
-- [ ] Add authentication
-
+- [x] Setup Database with DrizzleORM and Vercel Postgres
+- [x] Configure NextAuth with custom credentials provider
+- [x] Implement authentication with Telegram
 
 ## Getting Started
 

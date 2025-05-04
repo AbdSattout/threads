@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
+import { NavBar } from "@/components/nav-bar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,10 +16,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-  modal,
+  auth,
 }: Readonly<{
   children: React.ReactNode;
-  modal: React.ReactNode;
+  auth: React.ReactNode;
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -31,8 +32,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          {modal}
+          <main className="max-w-md mx-auto px-4">{children}</main>
+          {auth}
+          <NavBar />
         </ThemeProvider>
       </body>
     </html>

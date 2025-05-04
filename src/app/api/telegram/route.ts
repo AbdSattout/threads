@@ -2,12 +2,15 @@ import { signIn } from "@/auth";
 import db from "@/db";
 import { tokens, users } from "@/db/schema";
 import { env } from "@/env";
-import { bold, code, link } from "@/lib/tg-format";
+import { bold, code } from "@/lib/tg-format";
 import { generateRandomToken, sendMessage } from "@/lib/utils";
 import { AuthError } from "next-auth";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, userAgent } from "next/server";
 
 const GET = async (req: NextRequest) => {
+  const { isBot } = userAgent(req);
+  if (isBot) return new NextResponse("Ignored", { status: 200 });
+
   const params = req.nextUrl.searchParams;
   const token = params.get("token");
   if (!token) return new NextResponse("Missing token", { status: 400 });
@@ -71,8 +74,15 @@ const POST = async (req: NextRequest) => {
         chatId,
         `🔑 Your one-time login token:\n\n` +
         code(token) + `\n\n` +
-        `Paste it in the login form, or simply tap ${link(`${env.WEBSITE_URL}/api/telegram?token=${token}`, 'here')}.\n\n` +
-        `⚠️ Token expires in 10 minutes. Do ${bold('not')} share it with anyone.`
+        `Paste it in the login form, or simply tap the button below.\n\n` +
+        `⚠️ Token expires in 10 minutes. Do ${bold('not')} share it with anyone.`,
+        {
+          reply_markup: {
+            inline_keyboard: [[
+              { text: "Login to Threads", url: `${env.WEBSITE_URL}/api/telegram?token=${token}` }
+            ]]
+          }
+        }
       );
       break;
     }

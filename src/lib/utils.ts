@@ -27,7 +27,23 @@ export function generateRandomToken() {
   return Array.from(array).map(x => x.toString(16).padStart(2, '0')).join('');
 }
 
-export async function sendMessage(chatId: number, message: string) {
+interface InlineKeyboardButton {
+  text: string,
+  url: string,
+}
+
+interface MessageOptions {
+  parse_mode?: 'Markdown' | 'MarkdownV2' | 'HTML';
+  reply_markup?: {
+    inline_keyboard: InlineKeyboardButton[][];
+  };
+};
+
+export async function sendMessage(
+  chatId: number,
+  message: string,
+  options: MessageOptions = {}
+) {
   const response = await fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/sendMessage`, {
     method: 'POST',
     headers: {
@@ -37,6 +53,7 @@ export async function sendMessage(chatId: number, message: string) {
       chat_id: chatId,
       text: message,
       parse_mode: 'HTML',
+      ...options,
     }),
   });
 

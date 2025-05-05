@@ -1,28 +1,9 @@
-import { signIn } from "@/auth";
 import db from "@/db";
 import { tokens, users } from "@/db/schema";
 import { env } from "@/env";
 import { bold, code } from "@/lib/tg-format";
 import { generateRandomToken, sendMessage } from "@/lib/utils";
-import { AuthError } from "next-auth";
-import { NextRequest, NextResponse, userAgent } from "next/server";
-
-const GET = async (req: NextRequest) => {
-  const { isBot } = userAgent(req);
-  if (isBot) return new NextResponse("Ignored", { status: 200 });
-
-  const params = req.nextUrl.searchParams;
-  const token = params.get("token");
-  if (!token) return new NextResponse("Missing token", { status: 400 });
-
-  try {
-    await signIn("telegram", { token, redirectTo: "/" });
-  } catch (e) {
-    if (e instanceof AuthError)
-      return new NextResponse("Invalid or expired token", { status: 400 });
-    throw e;
-  }
-};
+import { NextRequest, NextResponse } from "next/server";
 
 const POST = async (req: NextRequest) => {
   const headers = req.headers;
@@ -45,7 +26,7 @@ const POST = async (req: NextRequest) => {
     case '/help': {
       await sendMessage(
         chatId,
-        `👋 Welcome to ` + bold('Threads') + `!\n\n` +
+        `👋 Welcome to ${bold('Threads')}!\n\n` +
         `Available commands:\n` +
         `/auth - 🔐 Get your login token\n` +
         `/sync - 🔄 Sync your profile with Threads\n` +
@@ -73,13 +54,13 @@ const POST = async (req: NextRequest) => {
       await sendMessage(
         chatId,
         `🔑 Your one-time login token:\n\n` +
-        code(token) + `\n\n` +
+        `${code(token)}\n\n` +
         `Paste it in the login form, or simply tap the button below.\n\n` +
         `⚠️ Token expires in 10 minutes. Do ${bold('not')} share it with anyone.`,
         {
           reply_markup: {
             inline_keyboard: [[
-              { text: "Login to Threads", url: `${env.WEBSITE_URL}/api/telegram?token=${token}` }
+              { text: "Login to Threads", url: `${env.WEBSITE_URL}/login?token=${token}` }
             ]]
           }
         }
@@ -104,4 +85,4 @@ const POST = async (req: NextRequest) => {
   return new NextResponse("OK", { status: 200 });
 };
 
-export { GET, POST };
+export { POST };

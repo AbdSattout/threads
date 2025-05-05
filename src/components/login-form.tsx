@@ -31,6 +31,7 @@ const TokenInput = ({ ref, isPending, result }: {
         type="text"
         placeholder="Paste your token"
         disabled={isPending}
+        defaultValue={searchParams.get("token") || ""}
         required
         autoComplete="off"
         pattern="[0-9a-f]{45}"

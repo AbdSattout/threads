@@ -63,17 +63,23 @@ export async function sendMessage(
   return await response.json();
 }
 
-export function getRequestInfo(req: Request, token: string) {
+export function getLoginInfo(req: Request, token: string) {
   const { browser, os, device } = userAgent(req);
   const geo = geolocation(req);
   const ip = ipAddress(req);
 
+  const location = `${[geo.city, geo.countryRegion, geo.country].filter(Boolean).join(", ")} ${geo.flag || "🌎"}`;
+
+  const deviceInfo = [
+    [device.vendor, device.model].filter(Boolean).join(" "),
+    [os.name, os.version].filter(Boolean).join(" "),
+    [browser.name, browser.version].filter(Boolean).join(" "),
+  ].filter(Boolean).join(" · ");
+
   return expandableBlockquote(pre(
-    normal`Device: ${device.vendor || "Unknown"} ${device.model || ""}\n` +
-    normal`OS: ${os.name || "Unknown"} ${os.version || ""}\n` +
-    normal`Browser: ${browser.name || "Unknown"} ${browser.version || ""}\n` +
+    normal`${deviceInfo || "Unknown Device"}\n` +
     normal`IP: ${ip || "Unknown"}\n` +
-    normal`Location: ${geo.city || "?"}, ${geo.region || "?"}, ${geo.country || "?"}\n` +
+    normal`Location: ${location}\n` +
     normal`Token: ${token}`
   ));
 }

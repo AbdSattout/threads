@@ -5,7 +5,7 @@ import { z } from "zod";
 import { tokens } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { after } from "next/server";
-import { getRequestInfo, sendMessage } from "@/lib/utils";
+import { getLoginInfo, sendMessage } from "@/lib/utils";
 import { bold } from "./lib/tg-format";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -39,7 +39,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const { user } = token;
 
         after(async () => {
-          const info = getRequestInfo(req, token.token);
+          const info = getLoginInfo(req, token.token);
 
           await sendMessage(
             parseInt(user.id, 16),

@@ -12,7 +12,7 @@ const Login = () => {
       </div>
       <LoginForm />
       <p className="text-center text-muted-foreground">
-        Made with ❤️ by <a href="https://t.me/AbdSattout" className="text-sky-500 hover:underline underline-offset-4">Abd Sattout</a>
+        Made with ❤️ by <a href="https://t.me/AbdSattout">Abd Sattout</a>
       </p>
     </div>
   );

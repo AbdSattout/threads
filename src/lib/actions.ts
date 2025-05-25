@@ -1,8 +1,9 @@
 "use server";
 
-import { signIn } from "@/auth";
+import { signIn, signOut } from "@/auth";
 import { AuthError, CredentialsSignin } from "next-auth";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export type AuthenticationResult = { ok: true } | { ok: false, msg: string };
 
@@ -21,4 +22,10 @@ const authenticate = async (_prevState: AuthenticationResult | null, formData: F
   }
 }
 
-export { authenticate };
+const logout = async () => {
+  await signOut({ redirect: false });
+  revalidatePath("/");
+  redirect("/login");
+};
+
+export { authenticate, logout };

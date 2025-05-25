@@ -3,11 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { authenticate, type AuthenticationResult } from "@/lib/actions";
 import { ArrowUpRight, CircleAlert } from "lucide-react";
 import { redirect, useSearchParams } from "next/navigation";
-import { useActionState, useRef, Suspense, RefObject } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { RefObject, Suspense, useActionState, useRef } from "react";
 
 const TokenInputSkeleton = () => {
   return <Skeleton className="w-full h-9" />;
@@ -61,7 +61,7 @@ const LoginForm = () => {
           href="https://t.me/ThreadsAlertsBot?start=auth"
           target="_blank"
           rel="noreferrer"
-          className="ml-auto text-sm inline-block hover:underline underline-offset-4"
+          className="ml-auto text-sm inline-block"
         >
           Request a token <ArrowUpRight className="h-4 w-4 inline" />
         </a>

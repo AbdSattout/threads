@@ -24,11 +24,7 @@ const NavBar = () => {
       <NavItem href="#">
         <Heart className={size} />
       </NavItem>
-      <NavItem href={`/login?to=${pathname}`} onClick={e => {
-        if (pathname !== "/") return;
-        e.preventDefault();
-        window.location.href = "/login";
-      }}>
+      <NavItem href={`/login?to=${pathname}`}>
         <UserCircle2 className={size} />
       </NavItem>
     </nav>

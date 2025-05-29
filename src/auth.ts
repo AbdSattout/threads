@@ -1,11 +1,11 @@
+import db from "@/db";
+import { tokens } from "@/db/schema";
+import { getLoginInfo, sendMessage } from "@/lib/utils";
+import { eq, lte, or } from "drizzle-orm";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import db from "@/db";
-import { z } from "zod";
-import { tokens } from "@/db/schema";
-import { eq } from "drizzle-orm";
 import { after } from "next/server";
-import { getLoginInfo, sendMessage } from "@/lib/utils";
+import { z } from "zod";
 import { bold } from "./lib/tg-format";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -21,17 +21,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
       },
       authorize: async (credentials, req) => {
-        const parsed = z.object({
-          token: z.string().length(45),
-        }).safeParse(credentials);
+        const parsed = z
+          .object({
+            token: z.string().length(45),
+          })
+          .safeParse(credentials);
 
         if (!parsed.success) return null;
 
         const token = await db.query.tokens.findFirst({
-          where: (tokens, { eq, and, gt }) => and(eq(tokens.token, parsed.data.token), gt(tokens.expiresAt, new Date())),
+          where: (tokens, { eq, and, gt }) =>
+            and(
+              eq(tokens.token, parsed.data.token),
+              gt(tokens.expiresAt, new Date()),
+            ),
           with: {
             user: true,
           },
+        });
+
+        after(async () => {
+          await db
+            .delete(tokens)
+            .where(
+              or(
+                lte(tokens.expiresAt, new Date()),
+                eq(tokens.token, parsed.data.token),
+              ),
+            );
         });
 
         if (!token) return null;
@@ -43,15 +60,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           await sendMessage(
             parseInt(user.id, 16),
-            `✅ You've successfully logged in to ${bold('Threads')}!\n\n${info}`
+            `✅ You've successfully logged in to ${bold("Threads")}!\n\n${info}`,
           );
         });
 
-        await db.delete(tokens).where(eq(tokens.id, token.id));
-
         return user;
-      }
-    })
+      },
+    }),
   ],
   session: {
     strategy: "jwt",
@@ -62,13 +77,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     jwt({ token, user }) {
       if (user) {
-        token.id = user.id
+        token.id = user.id;
       }
-      return token
+      return token;
     },
     async session({ session, token }) {
       if (!token?.id) return session;
-      const user = await db.query.users.findFirst({ where: (users, { eq }) => eq(users.id, token.id as string) });
+      const user = await db.query.users.findFirst({
+        where: (users, { eq }) => eq(users.id, token.id as string),
+      });
       if (!user) return session;
       return {
         ...session,
@@ -76,8 +93,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           ...session.user,
           id: user.id,
           name: user.name,
-        }
-      }
+        },
+      };
     },
   },
 });

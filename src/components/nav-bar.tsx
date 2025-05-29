@@ -1,18 +1,15 @@
-"use client";
-
-import { Edit, Heart, Home, Search, UserCircle2 } from "lucide-react";
+import { auth } from "@/auth";
 import { NavItem } from "@/components/nav-item";
-import { usePathname } from "next/navigation";
+import { Edit, Heart, Home, Search, UserCircle2 } from "lucide-react";
 
-const NavBar = () => {
+const NavBar = async () => {
   const size = "size-5";
-  const pathname = usePathname();
-
-  if (pathname === "/login") return null;
+  const session = await auth();
+  const user = session?.user;
 
   return (
     <nav className="fixed bottom-2 left-1/2 -translate-x-1/2 flex rounded-full shadow-sm bg-blur border gap-1 p-2">
-      <NavItem href="/">
+      <NavItem href={user ? "/home" : "/"}>
         <Home className={size} />
       </NavItem>
       <NavItem href="#">
@@ -24,7 +21,7 @@ const NavBar = () => {
       <NavItem href="#">
         <Heart className={size} />
       </NavItem>
-      <NavItem href={`/login?to=${pathname}`}>
+      <NavItem href={user ? `/user/${user.id}` : "/login"} as="/profile">
         <UserCircle2 className={size} />
       </NavItem>
     </nav>

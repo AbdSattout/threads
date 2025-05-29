@@ -1,21 +1,16 @@
 import { auth } from "@/auth";
-import { logout } from "@/lib/actions";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 const Page = async () => {
   const session = await auth();
-  if (!session?.user)
-    return (
-      <h1>
-        Not logged in, <Link href="/login">login?</Link>
-      </h1>
-    );
+  if (session?.user) redirect("/home");
+
   return (
     <h1>
-      Logged in as {session.user.name} ({session.user.id}),{" "}
-      <a href="/login" onClick={logout}>
-        logout?
-      </a>
+      Welcome to Threads!
+      <br />
+      Please <Link href="/login">login</Link> to continue.
     </h1>
   );
 };

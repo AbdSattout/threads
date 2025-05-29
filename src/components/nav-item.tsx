@@ -1,9 +1,9 @@
 "use client";
 
-import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { usePathname } from "next/navigation";
 import Link, { LinkProps } from "next/link";
+import { usePathname } from "next/navigation";
+import { ReactNode } from "react";
 
 interface NavItemProps extends LinkProps {
   children: ReactNode;
@@ -11,7 +11,7 @@ interface NavItemProps extends LinkProps {
 
 const NavItem = ({ children, ...props }: NavItemProps) => {
   const pathname = usePathname();
-  const active = props.href === pathname;
+  const active = pathname === props.href.toString();
 
   return (
     <Button

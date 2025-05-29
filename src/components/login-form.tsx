@@ -24,7 +24,7 @@ const TokenInput = ({
 }) => {
   const searchParams = useSearchParams();
   const [token, setToken] = useState(searchParams.get("token") || "");
-  if (result?.ok) redirect(searchParams.get("to") || "/");
+  if (result?.ok) redirect(searchParams.get("to") || "/home");
 
   const { msg } = result || { msg: null };
   const submit = () => {

@@ -1,6 +1,11 @@
+import { auth } from "@/auth";
 import { LoginForm } from "@/components/login-form";
+import { redirect } from "next/navigation";
 
-const Login = () => {
+const Login = async () => {
+  const session = await auth();
+  if (session?.user) redirect("/");
+
   return (
     <div className="flex flex-col justify-center gap-6 min-h-dvh">
       <div className="grid gap-2">

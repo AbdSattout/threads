@@ -23,8 +23,10 @@ const TokenInput = ({
   result: AuthenticationResult | null;
 }) => {
   const searchParams = useSearchParams();
-  const [token, setToken] = useState(searchParams.get("token") || "");
+  const [token, setToken] = useState("");
   if (result?.ok) redirect(searchParams.get("to") || "/home");
+  if (searchParams.has("token") && token !== searchParams.get("token"))
+    setToken(searchParams.get("token") ?? "");
 
   const { msg } = result || { msg: null };
   const submit = () => {

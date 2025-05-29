@@ -1,14 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { UserImage } from "@/components/user-image";
-import db from "@/db";
 import { logout } from "@/lib/actions";
+import { getUser } from "@/lib/db";
 import { notFound } from "next/navigation";
 
 const Profile = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
-  const user = await db.query.users.findFirst({
-    where: (users, { eq }) => eq(users.id, id),
-  });
+  const user = await getUser(id);
 
   if (!user) notFound();
 

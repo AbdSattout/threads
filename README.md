@@ -9,11 +9,12 @@ A social media app built with Next.js.
 - Bun.js
 
 ## TODO
-### Week 1
 - [x] Scaffold the app
-- [x] Setup Database with DrizzleORM and Vercel Postgres
+- [x] Setup Database with DrizzleORM and Neon Postgres
 - [x] Configure NextAuth with custom credentials provider
 - [x] Implement authentication with Telegram
+- [ ] Create posts schema and design
+- [ ] Add posting functionality
 
 ## Getting Started
 

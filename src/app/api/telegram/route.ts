@@ -1,8 +1,7 @@
-import db from "@/db";
-import { tokens, users } from "@/db/schema";
 import { env } from "@/env";
+import { addUser, generateToken, updateUser } from "@/lib/db";
 import { bold, code } from "@/lib/tg-format";
-import { generateRandomToken, sendMessage } from "@/lib/utils";
+import { sendMessage } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
 const POST = async (req: NextRequest) => {
@@ -46,24 +45,9 @@ const POST = async (req: NextRequest) => {
 
     case "/auth":
     case "/start auth": {
-      await db.insert(users).values({ id, name }).onConflictDoNothing();
+      await addUser(id, name);
 
-      const token = generateRandomToken() + id.padStart(13, "0");
-      const data = {
-        token,
-        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-      };
-
-      await db
-        .insert(tokens)
-        .values({
-          id,
-          ...data,
-        })
-        .onConflictDoUpdate({
-          target: tokens.id,
-          set: data,
-        });
+      const token = await generateToken(id);
 
       await sendMessage(
         chatId,
@@ -88,17 +72,7 @@ const POST = async (req: NextRequest) => {
     }
 
     case "/sync": {
-      const data = {
-        name,
-      };
-
-      await db
-        .insert(users)
-        .values({ id, ...data })
-        .onConflictDoUpdate({
-          target: users.id,
-          set: data,
-        });
+      await updateUser(id, name);
 
       await sendMessage(
         chatId,

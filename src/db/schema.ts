@@ -1,14 +1,16 @@
-import { pgTable, varchar, timestamp } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: varchar({ length: 16 }).primaryKey().notNull(),
   name: varchar({ length: 255 }).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp().defaultNow(),
 });
 
 export const tokens = pgTable("tokens", {
-  id: varchar({ length: 16 }).primaryKey().references(() => users.id),
+  id: varchar({ length: 16 })
+    .primaryKey()
+    .references(() => users.id),
   token: varchar({ length: 45 }).unique().notNull(),
   expiresAt: timestamp().notNull(),
 });

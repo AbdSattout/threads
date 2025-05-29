@@ -1,12 +1,10 @@
-import db from "@/db";
-import { tokens } from "@/db/schema";
+import { getTokenWithUser, getUser, revokeToken } from "@/lib/db";
+import { bold } from "@/lib/tg-format";
 import { getLoginInfo, sendMessage } from "@/lib/utils";
-import { eq, lte, or } from "drizzle-orm";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { after } from "next/server";
 import { z } from "zod";
-import { bold } from "./lib/tg-format";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -29,27 +27,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!parsed.success) return null;
 
-        const token = await db.query.tokens.findFirst({
-          where: (tokens, { eq, and, gt }) =>
-            and(
-              eq(tokens.token, parsed.data.token),
-              gt(tokens.expiresAt, new Date()),
-            ),
-          with: {
-            user: true,
-          },
-        });
-
-        after(async () => {
-          await db
-            .delete(tokens)
-            .where(
-              or(
-                lte(tokens.expiresAt, new Date()),
-                eq(tokens.token, parsed.data.token),
-              ),
-            );
-        });
+        const token = await getTokenWithUser(parsed.data.token);
 
         if (!token) return null;
 
@@ -62,6 +40,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             parseInt(user.id, 16),
             `✅ You've successfully logged in to ${bold("Threads")}!\n\n${info}`,
           );
+
+          await revokeToken(parsed.data.token);
         });
 
         return user;
@@ -83,9 +63,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async session({ session, token }) {
       if (!token?.id) return session;
-      const user = await db.query.users.findFirst({
-        where: (users, { eq }) => eq(users.id, token.id as string),
-      });
+      const user = await getUser(token.id as string);
       if (!user) return session;
       return {
         ...session,

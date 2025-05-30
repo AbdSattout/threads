@@ -13,8 +13,9 @@ A social media app built with Next.js.
 - [x] Setup Database with DrizzleORM and Neon Postgres
 - [x] Configure NextAuth with custom credentials provider
 - [x] Implement authentication with Telegram
-- [ ] Create posts schema and design
-- [ ] Add posting functionality
+- [x] Create posts and likes schema
+- [x] Implement CRUD operations for posts and likes
+- [ ] Add posting and liking functionality
 
 ## Getting Started
 

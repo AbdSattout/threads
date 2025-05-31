@@ -1,144 +1,155 @@
 import { html } from "@/lib/utils";
 
-export function normal(strings: TemplateStringsArray, ...values: unknown[]): string {
+/**
+ * Formats text without any special styling, escaping HTML characters
+ * @param strings - Template literal or string to format
+ * @param values - Values to interpolate if using template literal
+ * @returns HTML-escaped string
+ */
+export function normal(
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): string {
   return html(strings, values);
 }
 
+/**
+ * Formats text in bold using HTML <b> tags
+ * @param text - Text to format or template literal
+ * @param values - Values to interpolate if using template literal
+ * @returns Bold-formatted text
+ * @example bold("Important message")
+ * @example bold`User ${username} connected`
+ */
 export function bold(text: string): string;
-export function bold(strings: TemplateStringsArray, ...values: unknown[]): string;
-export function bold(strings: TemplateStringsArray | string, ...values: unknown[]): string {
-  if (typeof strings === 'string') {
+export function bold(
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): string;
+export function bold(
+  strings: TemplateStringsArray | string,
+  ...values: unknown[]
+): string {
+  if (typeof strings === "string") {
     return `<b>${strings}</b>`;
   }
   return bold(html(strings, values));
 }
 
-export function italic(text: string): string;
-export function italic(strings: TemplateStringsArray, ...values: unknown[]): string;
-export function italic(strings: TemplateStringsArray | string, ...values: unknown[]): string {
-  if (typeof strings === 'string') {
-    return `<i>${strings}</i>`;
-  }
-  return italic(html(strings, values));
-}
-
-export function underline(text: string): string;
-export function underline(strings: TemplateStringsArray, ...values: unknown[]): string;
-export function underline(strings: TemplateStringsArray | string, ...values: unknown[]): string {
-  if (typeof strings === 'string') {
-    return `<u>${strings}</u>`;
-  }
-  return underline(html(strings, values));
-}
-
-export function strikethrough(text: string): string;
-export function strikethrough(strings: TemplateStringsArray, ...values: unknown[]): string;
-export function strikethrough(strings: TemplateStringsArray | string, ...values: unknown[]): string {
-  if (typeof strings === 'string') {
-    return `<s>${strings}</s>`;
-  }
-  return strikethrough(html(strings, values));
-}
-
-export function spoiler(text: string): string;
-export function spoiler(strings: TemplateStringsArray, ...values: unknown[]): string;
-export function spoiler(strings: TemplateStringsArray | string, ...values: unknown[]): string {
-  if (typeof strings === 'string') {
-    return `<span class="tg-spoiler">${strings}</span>`;
-  }
-  return spoiler(html(strings, values));
-}
-
-export function link(href: string, text: string): string;
-export function link(href: string, strings: TemplateStringsArray, ...values: unknown[]): string;
-export function link(
-  href: string,
-  strings: TemplateStringsArray | string,
-  ...values: unknown[]
-): string {
-  if (typeof strings === 'string') {
-    return `<a href="${href}">${strings}</a>`;
-  }
-  return link(href, html(strings, values));
-}
-
-export function mention(userId: number | string, text: string): string;
-export function mention(userId: number | string, strings: TemplateStringsArray, ...values: unknown[]): string;
-export function mention(
-  userId: number | string,
-  strings: TemplateStringsArray | string,
-  ...values: unknown[]
-): string {
-  const href = `tg://user?id=${userId}`;
-  if (typeof strings === 'string') {
-    return `<a href="${href}">${strings}</a>`;
-  }
-  return mention(userId, html(strings, values));
-}
-
-export function emoji(emojiId: string, emoji: string): string;
-export function emoji(emojiId: string, strings: TemplateStringsArray, ...values: unknown[]): string;
-export function emoji(
-  emojiId: string,
-  strings: TemplateStringsArray | string,
-  ...values: unknown[]
-): string {
-  if (typeof strings === 'string') {
-    return `<tg-emoji emoji-id="${emojiId}">${strings}</tg-emoji>`;
-  }
-  return emoji(emojiId, html(strings, values));
-}
-
+/**
+ * Formats text as inline code using HTML <code> tags
+ * @param text - Text to format or template literal
+ * @param values - Values to interpolate if using template literal
+ * @returns Code-formatted text
+ * @example code("npm install")
+ * @example code`Version: ${version}`
+ */
 export function code(text: string): string;
-export function code(strings: TemplateStringsArray, ...values: unknown[]): string;
-export function code(strings: TemplateStringsArray | string, ...values: unknown[]): string {
-  if (typeof strings === 'string') {
+export function code(
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): string;
+export function code(
+  strings: TemplateStringsArray | string,
+  ...values: unknown[]
+): string {
+  if (typeof strings === "string") {
     return `<code>${strings}</code>`;
   }
   return code(html(strings, values));
 }
 
+/**
+ * Formats text as a preformatted block using HTML <pre> tags
+ * @param text - Text to format or template literal
+ * @param values - Values to interpolate if using template literal
+ * @returns Preformatted text block
+ * @example pre("Multi\nline\ntext")
+ * @example pre`Output:\n${result}`
+ */
 export function pre(text: string): string;
-export function pre(strings: TemplateStringsArray, ...values: unknown[]): string;
-export function pre(strings: TemplateStringsArray | string, ...values: unknown[]): string {
-  if (typeof strings === 'string') {
+export function pre(
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): string;
+export function pre(
+  strings: TemplateStringsArray | string,
+  ...values: unknown[]
+): string {
+  if (typeof strings === "string") {
     return `<pre>${strings}</pre>`;
   }
   return pre(html(strings, values));
 }
 
+/**
+ * Formats text as a preformatted code block with language syntax highlighting
+ * @param lang - Programming language identifier
+ * @param text - Code text or template literal
+ * @param values - Values to interpolate if using template literal
+ * @returns Language-specific code block
+ * @example preCode("javascript", "console.log('Hello');")
+ * @example preCode("json", `${JSON.stringify(data, null, 2)}`)
+ */
 export function preCode(lang: string, text: string): string;
-export function preCode(lang: string, strings: TemplateStringsArray, ...values: unknown[]): string;
+export function preCode(
+  lang: string,
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): string;
 export function preCode(
   lang: string,
   strings: TemplateStringsArray | string,
   ...values: unknown[]
 ): string {
-  if (typeof strings === 'string') {
+  if (typeof strings === "string") {
     return `<pre><code class="language-${lang}">${strings}</code></pre>`;
   }
   return preCode(lang, html(strings, values));
 }
 
+/**
+ * Formats text as a blockquote using HTML <blockquote> tags
+ * @param text - Text to format or template literal
+ * @param values - Values to interpolate if using template literal
+ * @returns Blockquote-formatted text
+ * @example blockquote("Famous quote")
+ * @example blockquote`User message: ${message}`
+ */
 export function blockquote(text: string): string;
-export function blockquote(strings: TemplateStringsArray, ...values: unknown[]): string;
+export function blockquote(
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): string;
 export function blockquote(
   strings: TemplateStringsArray | string,
   ...values: unknown[]
 ): string {
-  if (typeof strings === 'string') {
+  if (typeof strings === "string") {
     return `<blockquote>${strings}</blockquote>`;
   }
   return blockquote(html(strings, values));
 }
 
+/**
+ * Formats text as an expandable blockquote
+ * Creates a collapsible text block in Telegram messages
+ * @param text - Text to format or template literal
+ * @param values - Values to interpolate if using template literal
+ * @returns Expandable blockquote
+ * @example expandableBlockquote("Long text that can be expanded")
+ * @example expandableBlockquote`Detailed logs:\n${logs}`
+ */
 export function expandableBlockquote(text: string): string;
-export function expandableBlockquote(strings: TemplateStringsArray, ...values: unknown[]): string;
+export function expandableBlockquote(
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): string;
 export function expandableBlockquote(
   strings: TemplateStringsArray | string,
   ...values: unknown[]
 ): string {
-  if (typeof strings === 'string') {
+  if (typeof strings === "string") {
     return `<blockquote expandable>${strings}</blockquote>`;
   }
   return expandableBlockquote(html(strings, values));

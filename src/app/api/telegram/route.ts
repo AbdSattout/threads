@@ -4,15 +4,44 @@ import { bold, code } from "@/lib/tg-format";
 import { sendMessage } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
+interface TelegramChat {
+  id: number;
+  type: string;
+  first_name: string;
+  last_name?: string;
+}
+
+interface TelegramMessage {
+  text: string;
+  chat: TelegramChat;
+}
+
+interface TelegramUpdate {
+  message?: TelegramMessage;
+}
+
+/**
+ * POST request handler for Telegram webhook
+ * Processes incoming bot commands and manages user authentication flow
+ *
+ * Supported commands:
+ * - /start, /help: Shows welcome message and available commands
+ * - /auth: Generates and sends login token
+ * - /sync: Updates user profile information
+ *
+ * Webhook URL configuration in Telegram Bot API: https://api.telegram.org/botBOT_TOKEN/setWebhook?url=WEBSITE_URL/api/telegram&secret_token=BOT_SECRET
+ */
 const POST = async (req: NextRequest) => {
   const headers = req.headers;
   const secret = headers.get("X-Telegram-Bot-Api-Secret-Token");
 
+  // Validate the request is coming from Telegram
   if (!secret || secret !== env.BOT_SECRET)
     return new NextResponse("Forbidden", { status: 403 });
 
-  const body = await req.json();
+  const body = (await req.json()) as TelegramUpdate;
 
+  // Check message structure and ensure it's from a private chat
   if (
     !body.message ||
     !body.message.text ||
@@ -21,7 +50,7 @@ const POST = async (req: NextRequest) => {
   )
     return new NextResponse("Ignored", { status: 200 });
 
-  const chatId = body.message.chat.id as number;
+  const chatId = body.message.chat.id;
   const id = chatId.toString(16);
   const message = body.message.text;
   const name =

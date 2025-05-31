@@ -7,7 +7,7 @@ const Login = async () => {
   if (session?.user) redirect("/home");
 
   return (
-    <div className="flex flex-col justify-center gap-6 min-h-dvh">
+    <div className="flex flex-col grow justify-center gap-6">
       <div className="grid gap-2">
         <h1 className="text-3xl font-bold">Welcome to Threads!</h1>
         <p className="text-balance text-muted-foreground">

@@ -124,4 +124,8 @@
   a {
     @apply text-sky-500 hover:underline underline-offset-4;
   }
+
+  .bg-blur {
+    @apply bg-background/80 backdrop-blur-xs;
+  }
 }

@@ -9,30 +9,47 @@ import { AlertCircle, ArrowUpRight } from "lucide-react";
 import { redirect, useSearchParams } from "next/navigation";
 import { RefObject, Suspense, useActionState, useRef, useState } from "react";
 
+/**
+ * Skeleton component for token input field
+ * Displayed while the search params are being loaded
+ */
 const TokenInputSkeleton = () => {
   return <Skeleton className="w-full h-9" />;
 };
 
-const TokenInput = ({
-  ref,
-  isPending,
-  result,
-}: {
+interface TokenInputProps {
+  /** Reference to the parent form element -- used for auto-submission */
   ref: RefObject<HTMLFormElement | null>;
-  isPending: boolean;
+  /** Result of the last authentication attempt */
   result: AuthenticationResult | null;
-}) => {
+  /** Whether an authentication request is in progress */
+  isPending: boolean;
+}
+
+/**
+ * Token input field component with auto-submission and validation
+ */
+const TokenInput = ({ ref, isPending, result }: TokenInputProps) => {
   const searchParams = useSearchParams();
   const [token, setToken] = useState("");
+
+  // Redirect on successful authentication
   if (result?.ok) redirect(searchParams.get("to") || "/home");
+
+  // Sync token with URL parameter if present
   if (searchParams.has("token") && token !== searchParams.get("token"))
     setToken(searchParams.get("token") ?? "");
 
   const { msg } = result || { msg: null };
+
+  /**
+   * Submits the form and clears the token input
+   */
   const submit = () => {
     ref.current?.requestSubmit();
-    setToken("");
+    requestAnimationFrame(() => setToken(""));
   };
+
   if (ref.current) ref.current.onsubmit = submit;
 
   return (
@@ -45,12 +62,12 @@ const TokenInput = ({
           placeholder={isPending ? "Authenticating..." : "Paste your token"}
           disabled={isPending}
           value={token}
-          required
           autoFocus
           autoComplete="off"
-          pattern="[0-9a-f]{45}"
+          aria-invalid={!isPending && !!msg}
           onChange={(e) => {
             setToken(e.target.value);
+            // Auto-submit when token length is correct
             if (e.target.value.length === 45) submit();
           }}
         />
@@ -67,6 +84,26 @@ const TokenInput = ({
   );
 };
 
+/**
+ * Complete login form component with token input and Telegram bot link
+ *
+ * Features:
+ * - Auto-submission when valid token is pasted
+ * - Error message display
+ * - Loading state handling
+ * - Direct link to Telegram bot for token generation
+ *
+ * @example
+ * // In a login page:
+ * export default function LoginPage() {
+ *   return (
+ *     <div>
+ *       <h1>Login</h1>
+ *       <LoginForm />
+ *     </div>
+ *   );
+ * }
+ */
 const LoginForm = () => {
   const formRef = useRef<HTMLFormElement>(null);
   const [result, formAction, isPending] = useActionState(authenticate, null);

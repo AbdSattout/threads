@@ -21,15 +21,19 @@ export default function RootLayout({
   auth: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} antialiased`}>
+    <html lang="en" suppressHydrationWarning className="h-full">
+      <body
+        className={`${geistSans.variable} antialiased h-full flex flex-1 overflow-y-auto`}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          <main className="max-w-md mx-auto px-4">{children}</main>
+          <main className="flex flex-col min-h-min max-w-md mx-auto px-4 pb-17">
+            {children}
+          </main>
           <NavBar />
         </ThemeProvider>
       </body>

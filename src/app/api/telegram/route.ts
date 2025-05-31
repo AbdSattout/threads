@@ -1,24 +1,9 @@
 import { env } from "@/env";
 import { addUser, generateToken, updateUser } from "@/lib/db";
+import { TelegramUpdate } from "@/lib/definitions";
 import { bold, code } from "@/lib/tg-format";
 import { sendMessage } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
-
-interface TelegramChat {
-  id: number;
-  type: string;
-  first_name: string;
-  last_name?: string;
-}
-
-interface TelegramMessage {
-  text: string;
-  chat: TelegramChat;
-}
-
-interface TelegramUpdate {
-  message?: TelegramMessage;
-}
 
 /**
  * POST request handler for Telegram webhook

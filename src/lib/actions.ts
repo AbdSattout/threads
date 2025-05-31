@@ -1,22 +1,10 @@
 "use server";
 
 import { signIn, signOut } from "@/auth";
-import { TokenSchema } from "@/lib/definitions";
+import { AuthenticationResult, TokenSchema } from "@/lib/definitions";
 import { AuthError, CredentialsSignin } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-
-type AuthenticationResult =
-  | {
-      /** Whether the authentication was successful */
-      ok: true;
-    }
-  | {
-      /** Whether the authentication was successful */
-      ok: false;
-      /** Error message in case of authentication failure */
-      msg: string;
-    };
 
 /**
  * This server action handles the authentication process and manages
@@ -79,4 +67,4 @@ const logout = async () => {
   redirect("/login");
 };
 
-export { authenticate, logout, type AuthenticationResult };
+export { authenticate, logout };

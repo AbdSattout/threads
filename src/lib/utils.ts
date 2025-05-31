@@ -1,4 +1,5 @@
 import { env } from "@/env";
+import { MessageOptions } from "@/lib/definitions";
 import { expandableBlockquote, normal, pre } from "@/lib/tg-format";
 import { geolocation, ipAddress } from "@vercel/functions";
 import { clsx, type ClassValue } from "clsx";
@@ -59,28 +60,6 @@ export function generateRandomToken() {
   return Array.from(array)
     .map((x) => x.toString(16).padStart(2, "0"))
     .join("");
-}
-
-/**
- * Interface for Telegram inline keyboard button
- */
-interface InlineKeyboardButton {
-  /** Button text to display */
-  text: string;
-  /** URL to open when button is clicked */
-  url: string;
-}
-
-/**
- * Interface for Telegram message sending options
- */
-interface MessageOptions {
-  /** Markdown parsing mode for the message */
-  parse_mode?: "Markdown" | "MarkdownV2" | "HTML";
-  /** Inline keyboard markup for interactive buttons */
-  reply_markup?: {
-    inline_keyboard: InlineKeyboardButton[][];
-  };
 }
 
 /**

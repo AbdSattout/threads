@@ -1,5 +1,10 @@
 import { env } from "@/env";
-import { addUser, generateToken, updateUser } from "@/lib/db";
+import {
+  addUser,
+  generateToken,
+  removeUserSessions,
+  updateUser,
+} from "@/lib/db";
 import { TelegramUpdate } from "@/lib/definitions";
 import { bold, code } from "@/lib/tg-format";
 import { sendMessage } from "@/lib/utils";
@@ -13,6 +18,7 @@ import { NextRequest, NextResponse } from "next/server";
  * - /start, /help: Shows welcome message and available commands
  * - /auth: Generates and sends login token
  * - /sync: Updates user profile information
+ * - /signout: Terminates all sessions
  *
  * Webhook URL configuration in Telegram Bot API: https://api.telegram.org/botBOT_TOKEN/setWebhook?url=WEBSITE_URL/api/telegram&secret_token=BOT_SECRET
  */
@@ -52,6 +58,7 @@ const POST = async (req: NextRequest) => {
           `/auth - 🔐 Get your login token\n` +
           `/sync - 🔄 Sync your profile with Threads\n` +
           `/help - 📄 Show this message\n\n` +
+          `/signout - 🚪 Terminate all sessions\n\n` +
           `Start posting, replying, and connecting — all through Threads.`,
       );
       break;
@@ -92,6 +99,13 @@ const POST = async (req: NextRequest) => {
         chatId,
         `✅ Your profile info has been synced with Threads.`,
       );
+      break;
+    }
+
+    case "/signout": {
+      await removeUserSessions(id);
+
+      await sendMessage(chatId, `🚪 All sessions have been terminated.`);
       break;
     }
   }

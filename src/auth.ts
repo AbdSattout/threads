@@ -1,75 +1,119 @@
-import { getTokenWithUser, getUser, revokeToken } from "@/lib/db";
+import {
+  addSession,
+  getSessionWithUser,
+  getTokenWithUser,
+  removeSession,
+  revokeToken,
+  updateSession,
+} from "@/lib/db";
+import { AuthenticationResult } from "@/lib/definitions";
 import { bold } from "@/lib/tg-format";
-import { getLoginInfo, sendMessage } from "@/lib/utils";
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
+import { getDeviceInfo, getLoginInfo, sendMessage } from "@/lib/utils";
+import { cookies as getCookies, headers as getHeaders } from "next/headers";
+import { redirect } from "next/navigation";
 import { after } from "next/server";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [
-    Credentials({
-      id: "telegram",
-      name: "Telegram",
-      credentials: {
-        token: {
-          type: "text",
-          label: "Token",
-          placeholder: "abcdefghijklmnopqrstuvwxyz",
-        },
-      },
-      authorize: async (credentials, req) => {
-        if (!credentials.token || typeof credentials.token !== "string")
-          return null;
+// Cookie names for storing session information
+const SESSION_ID_COOKIE = "session_id";
+const SESSION_TOKEN_COOKIE = "session_token";
 
-        const token = await getTokenWithUser(credentials.token);
+/**
+ * Retrieves and validates the current user session
+ *
+ * Updates the session's last active timestamp and device info
+ *
+ * @returns Session object if authenticated, null otherwise
+ */
+const getSession = async () => {
+  const cookies = await getCookies();
+  const id = cookies.get(SESSION_ID_COOKIE)?.value;
+  const token = cookies.get(SESSION_TOKEN_COOKIE)?.value;
 
-        if (!token) return null;
+  if (!id || !token) return null;
 
-        const { user } = token;
+  const session = await getSessionWithUser(id);
 
-        // Schedule post-authentication tasks
-        after(async () => {
-          const info = getLoginInfo(req, token.token);
+  if (!session || session.token !== token) {
+    await signOut();
+    return null;
+  }
 
-          // Send Telegram notification about successful login
-          await sendMessage(
-            parseInt(user.id, 16),
-            `✅ You've successfully logged in to ${bold("Threads")}!\n\n${info}`,
-          );
+  const headers = await getHeaders();
+  const deviceInfo = getDeviceInfo(headers);
 
-          // Invalidate used token
-          await revokeToken(token.token);
-        });
+  after(async () => {
+    await updateSession(id, deviceInfo);
+  });
 
-        return user;
-      },
-    }),
-  ],
-  session: {
-    strategy: "jwt",
-  },
-  pages: {
-    signIn: "/login",
-  },
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (!token?.id) return session;
-      const user = await getUser(token.id as string);
-      if (!user) return session;
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: user.id,
-          name: user.name,
-        },
-      };
-    },
-  },
-});
+  return session;
+};
+
+/**
+ * Authentication guard - redirects to login if not authenticated
+ *
+ * @returns Session object if authenticated
+ * @throws Redirects to login page if not authenticated
+ */
+const requireAuth = async () => {
+  const session = await getSession();
+
+  if (!session) redirect("/login");
+
+  return session;
+};
+
+/**
+ * Creates a new session for a user and sets session cookies
+ *
+ * @param id - User's unique identifier
+ */
+const signIn = async (token: string): Promise<AuthenticationResult> => {
+  const { user } = (await getTokenWithUser(token)) || { user: null };
+  if (!user) return { ok: false, msg: "Invalid or expired token." };
+
+  const headers = await getHeaders();
+  const deviceInfo = getDeviceInfo(headers);
+  const info = getLoginInfo(headers, token);
+
+  const session = await addSession(user.id, deviceInfo);
+
+  const cookies = await getCookies();
+  cookies.set(SESSION_ID_COOKIE, session.id);
+  cookies.set(SESSION_TOKEN_COOKIE, session.token);
+
+  // Send Telegram notification about successful login
+  after(async () => {
+    await sendMessage(
+      parseInt(user.id, 16),
+      `✅ You've successfully logged in to ${bold("Threads")}!\n\n${info}`,
+    );
+
+    await revokeToken(token);
+  });
+
+  return { ok: true };
+};
+
+/**
+ * Destroys the current session and clears session cookies
+ */
+const signOut = async () => {
+  const cookies = await getCookies();
+  const id = cookies.get(SESSION_ID_COOKIE)?.value;
+  const token = cookies.get(SESSION_TOKEN_COOKIE)?.value;
+
+  if (id && token) await removeSession(id);
+
+  cookies.delete(SESSION_ID_COOKIE);
+  cookies.delete(SESSION_TOKEN_COOKIE);
+};
+
+/**
+ * Checks if the current request is authenticated
+ */
+const isAuthenticated = async () => {
+  const session = await getSession();
+  return session !== null;
+};
+
+export { getSession, isAuthenticated, requireAuth, signIn, signOut };

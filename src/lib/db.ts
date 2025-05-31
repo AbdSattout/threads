@@ -1,5 +1,5 @@
 import db from "@/db";
-import { likes, posts, tokens, users } from "@/db/schema";
+import { likes, posts, sessions, tokens, users } from "@/db/schema";
 import { generateRandomToken } from "@/lib/utils";
 import { and, count, desc, eq } from "drizzle-orm";
 
@@ -316,9 +316,106 @@ const getLikeStatus = async (user: string, post: string) => {
   return !!like;
 };
 
+/**
+ * Creates a new session for a user
+ * @param user - ID of the user creating the session
+ * @param device - User agent or device information
+ * @returns Created session object with token
+ */
+const addSession = async (user: string, device: string) => {
+  const token = generateRandomToken(32);
+
+  const [session] = await db
+    .insert(sessions)
+    .values({
+      user: user,
+      token,
+      device,
+      lastActive: new Date(),
+    })
+    .returning();
+
+  return session;
+};
+
+/**
+ * Updates a session's last active timestamp and device info
+ * @param id - Unique session identifier
+ * @param device - Updated user agent or device information
+ * @returns Updated session object or null if not found
+ */
+const updateSession = async (id: string, device: string) => {
+  const updatedSessions = await db
+    .update(sessions)
+    .set({
+      lastActive: new Date(),
+      device,
+    })
+    .where(eq(sessions.id, id))
+    .returning();
+
+  if (!updatedSessions) return null;
+
+  return updatedSessions[0];
+};
+
+/**
+ * Retrieves a session by its token
+ * @param id - Unique session identifier
+ * @returns Session object or null if not found
+ */
+const getSessionWithUser = async (id: string) => {
+  const session = await db.query.sessions.findFirst({
+    where: (sessions, { eq }) => eq(sessions.id, id),
+    with: {
+      user: true,
+    },
+  });
+
+  return session || null;
+};
+
+/**
+ * Deletes a session by its ID
+ * @param id - Unique session identifier
+ * @returns Deleted session object or null if not found
+ */
+const removeSession = async (id: string) => {
+  const [session] = await db
+    .delete(sessions)
+    .where(eq(sessions.id, id))
+    .returning();
+
+  return session || null;
+};
+
+/**
+ * Gets all active sessions for a user
+ * @param user - User's unique identifier
+ * @returns Array of session objects
+ */
+const getUserSessions = async (user: string) => {
+  const userSessions = await db.query.sessions.findMany({
+    where: (sessions, { eq }) => eq(sessions.user, user),
+    orderBy: [desc(sessions.lastActive)],
+  });
+
+  return userSessions;
+};
+
+/**
+ * Remove all sessions for a user
+ * @param user - User's unique identifier
+ * @returns Deleted session objects
+ */
+const removeUserSessions = async (user: string) => {
+  await db.delete(sessions).where(eq(sessions.user, user));
+};
+
 export {
   addLike,
   addPost,
+  addSession,
   addUser,
   generateToken,
   getLikesCount,
@@ -328,10 +425,15 @@ export {
   getPostsCount,
   getPostWithReplies,
   getRepliesCount,
+  getSessionWithUser,
   getTokenWithUser,
   getUser,
+  getUserSessions,
   removeLike,
   removePost,
+  removeSession,
+  removeUserSessions,
   revokeToken,
+  updateSession,
   updateUser,
 };

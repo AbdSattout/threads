@@ -2,7 +2,6 @@
 
 import { signIn, signOut } from "@/auth";
 import { AuthenticationResult, TokenSchema } from "@/lib/definitions";
-import { AuthError, CredentialsSignin } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -25,30 +24,20 @@ const authenticate = async (
   _prevState: AuthenticationResult | null,
   formData: FormData,
 ): Promise<AuthenticationResult> => {
-  try {
-    const token = formData.get("token") || "";
+  const token = formData.get("token") || "";
 
-    // Validate token format using Zod
-    const parsed = TokenSchema.safeParse(token);
+  // Validate token format using Zod
+  const parsed = TokenSchema.safeParse(token);
 
-    if (!parsed.success)
-      return {
-        ok: false,
-        msg: parsed.error.issues.at(0)?.message || "Invalid token.",
-      };
+  if (!parsed.success)
+    return {
+      ok: false,
+      msg: parsed.error.issues.at(0)?.message || "Invalid token.",
+    };
 
-    await signIn("telegram", { token: formData.get("token"), redirect: false });
-    revalidatePath("/");
-    return { ok: true };
-  } catch (error) {
-    if (error instanceof AuthError) {
-      if (error instanceof CredentialsSignin)
-        return { ok: false, msg: "Invalid or expired token." };
-      return { ok: false, msg: "Something went wrong." };
-    }
-
-    throw error;
-  }
+  const result = await signIn(parsed.data);
+  if (result.ok) revalidatePath("/");
+  return result;
 };
 
 /**
@@ -62,7 +51,7 @@ const authenticate = async (
  * </form>
  */
 const logout = async () => {
-  await signOut({ redirect: false });
+  await signOut();
   revalidatePath("/");
   redirect("/login");
 };

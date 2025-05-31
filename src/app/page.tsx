@@ -1,10 +1,9 @@
-import { auth } from "@/auth";
+import { isAuthenticated } from "@/auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 const Page = async () => {
-  const session = await auth();
-  if (session?.user) redirect("/home");
+  if (await isAuthenticated()) redirect("/home");
 
   return (
     <h1>

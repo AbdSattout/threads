@@ -21,6 +21,24 @@ const users = pgTable("users", {
 });
 
 /**
+ * User sessions table -- Stores user sessions with device information
+ */
+const sessions = pgTable("sessions", {
+  /** Unique session identifier */
+  id: uuid().primaryKey().defaultRandom(),
+  /** ID of the user who created the session */
+  user: varchar({ length: 16 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  /** Session token */
+  token: varchar({ length: 64 }).unique().notNull(),
+  /** Latest timestamp when the session was active */
+  lastActive: timestamp().notNull().defaultNow(),
+  /** Device information */
+  device: varchar({ length: 255 }).notNull(),
+});
+
+/**
  * Authentication tokens table -- Stores tokens with expiration timestamps
  */
 const tokens = pgTable("tokens", {
@@ -81,6 +99,7 @@ const likes = pgTable(
  * - One-to-one relationship with tokens
  * - One-to-many relationship with posts
  * - One-to-many relationship with likes
+ * - One-to-many relationship with sessions
  */
 const usersRelations = relations(users, ({ one, many }) => ({
   token: one(tokens, {
@@ -89,6 +108,7 @@ const usersRelations = relations(users, ({ one, many }) => ({
   }),
   posts: many(posts),
   likes: many(likes),
+  sessions: many(sessions),
 }));
 
 /**
@@ -140,11 +160,24 @@ const likesRelations = relations(likes, ({ one }) => ({
   }),
 }));
 
+/**
+ * Defines relationships for the sessions table
+ * - One-to-one relationship with users
+ */
+const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.user],
+    references: [users.id],
+  }),
+}));
+
 export {
   likes,
   likesRelations,
   posts,
   postsRelations,
+  sessions,
+  sessionsRelations,
   tokens,
   tokensRelations,
   users,

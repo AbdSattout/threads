@@ -1,9 +1,7 @@
-import { auth } from "@/auth";
-import { redirect } from "next/navigation";
+import { requireAuth } from "@/auth";
 
 const Home = async () => {
-  const session = await auth();
-  if (!session?.user) redirect("/login");
+  await requireAuth();
 
   return <h1>Home</h1>;
 };

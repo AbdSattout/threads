@@ -1,10 +1,10 @@
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { NavItem } from "@/components/nav-item";
 import { Edit, Heart, Home, Search, UserCircle2 } from "lucide-react";
 
 const NavBar = async () => {
   const size = "size-5";
-  const session = await auth();
+  const session = await getSession();
   const user = session?.user;
 
   return (
@@ -21,7 +21,7 @@ const NavBar = async () => {
       <NavItem href="#">
         <Heart className={size} />
       </NavItem>
-      <NavItem href={user ? `/user/${user.id}` : "/login"} as="/profile">
+      <NavItem href={user ? `/user/${user.id}` : "/login"}>
         <UserCircle2 className={size} />
       </NavItem>
     </nav>

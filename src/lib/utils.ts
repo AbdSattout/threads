@@ -1,9 +1,8 @@
 import { env } from "@/env";
 import { MessageOptions } from "@/lib/definitions";
 import { expandableBlockquote, normal, pre } from "@/lib/tg-format";
-import { geolocation, ipAddress } from "@vercel/functions";
 import { clsx, type ClassValue } from "clsx";
-import { userAgent } from "next/server";
+import { userAgentFromString } from "next/server";
 import { twMerge } from "tailwind-merge";
 
 /**
@@ -52,10 +51,11 @@ export function html(
  *
  * Uses the Web Crypto API to ensure high-quality randomness
  *
- * @returns 32-character hexadecimal string token
+ * @param bytes - Number of random bytes to generate (default: 16)
+ * @returns Hexadecimal string token
  */
-export function generateRandomToken() {
-  const array = new Uint8Array(16);
+export function generateRandomToken(bytes: number = 16) {
+  const array = new Uint8Array(bytes);
   crypto.getRandomValues(array);
   return Array.from(array)
     .map((x) => x.toString(16).padStart(2, "0"))
@@ -98,23 +98,21 @@ export async function sendMessage(
 }
 
 /**
- * Generates a formatted login information message including device, browser,
- * location and IP address details for security notifications
+ * Extracts and formats device information from HTTP headers
  *
- * @param req - HTTP Request object containing user agent and location data
- * @param token - Authentication token to include in the message
- * @returns Formatted HTML string with login details
+ * Parses the user-agent string to identify device, operating system and browser details
+ *
+ * @param headers - HTTP Headers object containing the user-agent string
+ * @returns Formatted string with device, OS and browser information, or "Unknown Device" if not available
  *
  * @example
- * const loginMessage = getLoginInfo(request, "abc123");
- * await sendMessage(chatId, loginMessage);
+ * const deviceDetails = getDeviceInfo(request.headers);
+ * // Returns something like: "iPhone 12 · iOS 15.0 · Safari 15.0"
  */
-export function getLoginInfo(req: Request, token: string) {
-  const { browser, os, device } = userAgent(req);
-  const geo = geolocation(req);
-  const ip = ipAddress(req);
-
-  const location = `${[geo.city, geo.countryRegion, geo.country].filter(Boolean).join(", ")} ${geo.flag || "🌎"}`;
+export function getDeviceInfo(headers: Headers) {
+  const { browser, os, device } = userAgentFromString(
+    headers.get("user-agent") ?? "",
+  );
 
   const deviceInfo = [
     [device.vendor, device.model].filter(Boolean).join(" "),
@@ -124,9 +122,46 @@ export function getLoginInfo(req: Request, token: string) {
     .filter(Boolean)
     .join(" · ");
 
+  return deviceInfo || "Unknown Device";
+}
+
+/**
+ * Generates a formatted login information message including device, browser,
+ * location and IP address details for security notifications
+ *
+ * @param headers - HTTP Headers object containing user agent and location data
+ * @param token - Authentication token to include in the message
+ * @returns Formatted HTML string with login details
+ *
+ * @example
+ * const loginMessage = getLoginInfo(request.headers, "abc123");
+ * await sendMessage(chatId, loginMessage);
+ */
+export function getLoginInfo(headers: Headers, token: string) {
+  // Get geolocation data directly from headers
+  const city = headers.get("x-vercel-ip-city")
+    ? decodeURIComponent(headers.get("x-vercel-ip-city") ?? "")
+    : undefined;
+  const country = headers.get("x-vercel-ip-country");
+  const countryRegion = headers.get("x-vercel-ip-country-region");
+  const ip = headers.get("x-real-ip");
+
+  // Generate country flag emoji if country code exists
+  let flag: string | undefined;
+  if (country && /^[A-Z]{2}$/.test(country)) {
+    flag = String.fromCodePoint(
+      ...country.split("").map((char) => 127397 + char.charCodeAt(0)),
+    );
+  }
+
+  const location = `${[city, countryRegion, country]
+    .filter(Boolean)
+    .join(", ")} ${flag || "🌎"}`;
+  const deviceInfo = getDeviceInfo(headers);
+
   return expandableBlockquote(
     pre(
-      normal`${deviceInfo || "Unknown Device"}\n` +
+      normal`${deviceInfo}\n` +
         normal`IP: ${ip || "Unknown"}\n` +
         normal`Location: ${location}\n` +
         normal`Token: ${token}`,

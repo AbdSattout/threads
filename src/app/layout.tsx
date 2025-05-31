@@ -18,7 +18,6 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-  auth: React.ReactNode;
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="h-full">
@@ -31,7 +30,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <main className="flex flex-col min-h-min max-w-md mx-auto px-4 pb-17">
+          <main className="flex flex-col min-h-min max-w-md w-full self-stretch mx-auto px-4 pb-17">
             {children}
           </main>
           <NavBar />

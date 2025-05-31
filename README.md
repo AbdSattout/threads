@@ -35,8 +35,6 @@ DATABASE_URL=your_neon_postgres_connection_string
 BOT_TOKEN=your_telegram_bot_token
 BOT_SECRET=your_telegram_webhook_secret
 WEBSITE_URL=http://localhost:3000
-NEXTAUTH_SECRET=your_nextauth_secret
-NEXTAUTH_URL=http://localhost:3000
 ```
 
 ### Installation
@@ -104,7 +102,7 @@ threads/
 - [x] Implement authentication with Telegram
 - [x] Create posts and likes schema
 - [x] Implement CRUD operations for posts and likes
-- [ ] Move off of NextAuth and implement custom authentication
+- [x] Move off of NextAuth and implement custom authentication
 - [ ] Add posting and liking functionality
 
 ## 🤝 Contributing

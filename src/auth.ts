@@ -33,10 +33,7 @@ const getSession = async () => {
 
   const session = await getSessionWithUser(id);
 
-  if (!session || session.token !== token) {
-    await signOut();
-    return null;
-  }
+  if (!session || session.token !== token) return null;
 
   const headers = await getHeaders();
   const deviceInfo = getDeviceInfo(headers);
@@ -65,7 +62,9 @@ const requireAuth = async () => {
 /**
  * Creates a new session for a user and sets session cookies
  *
- * @param id - User's unique identifier
+ * Can only be used in a Server Action or Route Handler
+ *
+ * @param token - One-time login token
  */
 const signIn = async (token: string): Promise<AuthenticationResult> => {
   const { user } = (await getTokenWithUser(token)) || { user: null };
@@ -96,6 +95,8 @@ const signIn = async (token: string): Promise<AuthenticationResult> => {
 
 /**
  * Destroys the current session and clears session cookies
+ *
+ * Can only be used in a Server Action or Route Handler
  */
 const signOut = async () => {
   const cookies = await getCookies();

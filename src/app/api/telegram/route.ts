@@ -66,9 +66,19 @@ const POST = async (req: NextRequest) => {
 
     case "/auth":
     case "/start auth": {
-      await addUser(id, name);
+      const user = await addUser(id, name);
+
+      if (!user) {
+        await sendMessage(chatId, `🔴 Failed to create an account for you.`);
+        break;
+      }
 
       const token = await generateToken(id);
+
+      if (!token) {
+        await sendMessage(chatId, `🔴 Failed to generate token.`);
+        break;
+      }
 
       await sendMessage(
         chatId,
@@ -93,7 +103,12 @@ const POST = async (req: NextRequest) => {
     }
 
     case "/sync": {
-      await updateUser(id, name);
+      const user = await updateUser(id, name);
+
+      if (!user) {
+        await sendMessage(chatId, `🔴 Failed to sync your profile.`);
+        break;
+      }
 
       await sendMessage(
         chatId,
@@ -103,9 +118,11 @@ const POST = async (req: NextRequest) => {
     }
 
     case "/quit": {
-      await removeUserSessions(id);
-
-      await sendMessage(chatId, `🚪 All sessions have been terminated.`);
+      if (await removeUserSessions(id)) {
+        await sendMessage(chatId, `🚪 All sessions have been terminated.`);
+      } else {
+        await sendMessage(chatId, `🔴 Failed to terminate sessions.`);
+      }
       break;
     }
   }

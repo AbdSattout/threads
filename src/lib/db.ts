@@ -7,16 +7,21 @@ import { and, count, desc, eq } from "drizzle-orm";
  * Creates a new user if they don't exist
  * @param id - Unique user identifier (from Telegram)
  * @param name - User's display name
- * @returns Created user object
+ * @returns Created user object or null if error occurs
  */
 const addUser = async (id: string, name: string) => {
-  const [user] = await db
-    .insert(users)
-    .values({ id, name })
-    .onConflictDoNothing()
-    .returning();
+  try {
+    const [user] = await db
+      .insert(users)
+      .values({ id, name })
+      .onConflictDoNothing()
+      .returning();
 
-  return user;
+    return user;
+  } catch (error) {
+    console.error("Error adding user:", error);
+    return null;
+  }
 };
 
 /**
@@ -25,30 +30,40 @@ const addUser = async (id: string, name: string) => {
  * @returns User object or null if not found
  */
 const getUser = async (id: string) => {
-  const user = await db.query.users.findFirst({
-    where: (users, { eq }) => eq(users.id, id),
-  });
+  try {
+    const user = await db.query.users.findFirst({
+      where: (users, { eq }) => eq(users.id, id),
+    });
 
-  return user ?? null;
+    return user ?? null;
+  } catch (error) {
+    console.error("Error getting user:", error);
+    return null;
+  }
 };
 
 /**
  * Updates or creates a user with the given information
  * @param id - User's unique identifier
  * @param name - User's new display name
- * @returns Updated or created user object
+ * @returns Updated or created user object or null if error occurs
  */
 const updateUser = async (id: string, name: string) => {
-  const [user] = await db
-    .insert(users)
-    .values({ id, name })
-    .onConflictDoUpdate({
-      target: users.id,
-      set: { name },
-    })
-    .returning();
+  try {
+    const [user] = await db
+      .insert(users)
+      .values({ id, name })
+      .onConflictDoUpdate({
+        target: users.id,
+        set: { name },
+      })
+      .returning();
 
-  return user;
+    return user;
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return null;
+  }
 };
 
 /**
@@ -59,24 +74,29 @@ const updateUser = async (id: string, name: string) => {
  * Expires in 10 minutes from creation
  *
  * @param id - User's unique identifier
- * @returns Generated token string
+ * @returns Generated token string or null if error occurs
  */
 const generateToken = async (id: string) => {
-  const token = generateRandomToken() + id.padStart(13, "0");
-  const data = {
-    token,
-    expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-  };
+  try {
+    const token = generateRandomToken() + id.padStart(13, "0");
+    const data = {
+      token,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    };
 
-  await db
-    .insert(tokens)
-    .values({ id, ...data })
-    .onConflictDoUpdate({
-      target: tokens.id,
-      set: data,
-    });
+    await db
+      .insert(tokens)
+      .values({ id, ...data })
+      .onConflictDoUpdate({
+        target: tokens.id,
+        set: data,
+      });
 
-  return token;
+    return token;
+  } catch (error) {
+    console.error("Error generating token:", error);
+    return null;
+  }
 };
 
 /**
@@ -85,14 +105,19 @@ const generateToken = async (id: string) => {
  * @returns Revoked token object or null if token not found
  */
 const revokeToken = async (token: string) => {
-  const revokedTokens = await db
-    .delete(tokens)
-    .where(eq(tokens.token, token))
-    .returning();
+  try {
+    const revokedTokens = await db
+      .delete(tokens)
+      .where(eq(tokens.token, token))
+      .returning();
 
-  if (!revokedTokens) return null;
+    if (!revokedTokens) return null;
 
-  return revokedTokens[0];
+    return revokedTokens[0];
+  } catch (error) {
+    console.error("Error revoking token:", error);
+    return null;
+  }
 };
 
 /**
@@ -102,15 +127,20 @@ const revokeToken = async (token: string) => {
  * @returns Token with user object or null if invalid/expired
  */
 const getTokenWithUser = async (token: string) => {
-  const tokenWithUser = await db.query.tokens.findFirst({
-    where: (tokens, { eq, and, gt }) =>
-      and(eq(tokens.token, token), gt(tokens.expiresAt, new Date())),
-    with: {
-      user: true,
-    },
-  });
+  try {
+    const tokenWithUser = await db.query.tokens.findFirst({
+      where: (tokens, { eq, and, gt }) =>
+        and(eq(tokens.token, token), gt(tokens.expiresAt, new Date())),
+      with: {
+        user: true,
+      },
+    });
 
-  return tokenWithUser ?? null;
+    return tokenWithUser ?? null;
+  } catch (error) {
+    console.error("Error getting token with user:", error);
+    return null;
+  }
 };
 
 /**
@@ -118,77 +148,102 @@ const getTokenWithUser = async (token: string) => {
  * @param user - ID of the user creating the post
  * @param text - Content of the post
  * @param replyTo - Optional ID of the post being replied to
- * @returns Created post object
+ * @returns Created post object or null if error occurs
  */
 const addPost = async (user: string, text: string, replyTo?: string) => {
-  const [post] = await db
-    .insert(posts)
-    .values({ user, text, replyTo })
-    .returning();
+  try {
+    const [post] = await db
+      .insert(posts)
+      .values({ user, text, replyTo })
+      .returning();
 
-  return post;
+    return post;
+  } catch (error) {
+    console.error("Error adding post:", error);
+    return null;
+  }
 };
 
 /**
  * Counts total posts by a user
  * @param user - User's unique identifier
- * @returns Number of posts by the user
+ * @returns Number of posts by the user or 0 if error occurs
  */
 const getPostsCount = async (user: string) => {
-  const [{ cnt }] = await db
-    .select({ cnt: count() })
-    .from(posts)
-    .where(eq(posts.user, user));
+  try {
+    const [{ cnt }] = await db
+      .select({ cnt: count() })
+      .from(posts)
+      .where(eq(posts.user, user));
 
-  return cnt;
+    return cnt;
+  } catch (error) {
+    console.error("Error getting posts count:", error);
+    return 0;
+  }
 };
 
 /**
  * Counts likes on a specific post
  * @param post - Post's unique identifier
- * @returns Number of likes on the post
+ * @returns Number of likes on the post or 0 if error occurs
  */
 const getLikesCount = async (post: string) => {
-  const [{ cnt }] = await db
-    .select({ cnt: count() })
-    .from(likes)
-    .where(eq(likes.post, post));
+  try {
+    const [{ cnt }] = await db
+      .select({ cnt: count() })
+      .from(likes)
+      .where(eq(likes.post, post));
 
-  return cnt;
+    return cnt;
+  } catch (error) {
+    console.error("Error getting likes count:", error);
+    return 0;
+  }
 };
 
 /**
  * Counts replies to a specific post
  * @param post - Post's unique identifier
- * @returns Number of replies to the post
+ * @returns Number of replies to the post or 0 if error occurs
  */
 const getRepliesCount = async (post: string) => {
-  const [{ cnt }] = await db
-    .select({ cnt: count() })
-    .from(posts)
-    .where(eq(posts.replyTo, post));
+  try {
+    const [{ cnt }] = await db
+      .select({ cnt: count() })
+      .from(posts)
+      .where(eq(posts.replyTo, post));
 
-  return cnt;
+    return cnt;
+  } catch (error) {
+    console.error("Error getting replies count:", error);
+    return 0;
+  }
 };
 
 /**
  * Retrieves all posts by a user with like and reply counts, ordered by date (newest first)
  * @param user - User's unique identifier
- * @returns Array of posts with engagement metrics
+ * @returns Array of posts with engagement metrics or an empty array if error occurs
  */
 const getPosts = async (user: string) => {
-  const postsList = await db.query.posts.findMany({
-    where: (posts, { eq }) => eq(posts.user, user),
-    orderBy: [desc(posts.date)],
-  });
+  try {
+    const postsList = await db.query.posts.findMany({
+      where: (posts, { eq }) => eq(posts.user, user),
+      orderBy: [desc(posts.date)],
+    });
 
-  return await Promise.all(
-    postsList.map(async (post) => ({
-      ...post,
-      likesCount: await getLikesCount(post.id),
-      repliesCount: await getRepliesCount(post.id),
-    })),
-  );
+    return await Promise.all(
+      postsList.map(async (post) => ({
+        ...post,
+        likesCount: await getLikesCount(post.id),
+        repliesCount: await getRepliesCount(post.id),
+      })),
+    );
+  } catch (error) {
+    console.error("Error getting posts:", error);
+    return [];
+  }
 };
 
 /**
@@ -197,20 +252,25 @@ const getPosts = async (user: string) => {
  * @returns Post object with user and counts or null if not found
  */
 const getPost = async (id: string) => {
-  const post = await db.query.posts.findFirst({
-    where: (posts, { eq }) => eq(posts.id, id),
-    with: {
-      user: true,
-    },
-  });
+  try {
+    const post = await db.query.posts.findFirst({
+      where: (posts, { eq }) => eq(posts.id, id),
+      with: {
+        user: true,
+      },
+    });
 
-  if (!post) return null;
+    if (!post) return null;
 
-  return {
-    ...post,
-    likesCount: await getLikesCount(post.id),
-    repliesCount: await getRepliesCount(post.id),
-  };
+    return {
+      ...post,
+      likesCount: await getLikesCount(post.id),
+      repliesCount: await getRepliesCount(post.id),
+    };
+  } catch (error) {
+    console.error("Error getting post:", error);
+    return null;
+  }
 };
 
 /**
@@ -222,34 +282,39 @@ const getPost = async (id: string) => {
  * @returns Post object with replies and metadata or null if not found
  */
 const getPostWithReplies = async (id: string) => {
-  const post = await db.query.posts.findFirst({
-    where: (posts, { eq }) => eq(posts.id, id),
-    with: {
-      user: true,
-      replies: {
-        with: {
-          user: true,
+  try {
+    const post = await db.query.posts.findFirst({
+      where: (posts, { eq }) => eq(posts.id, id),
+      with: {
+        user: true,
+        replies: {
+          with: {
+            user: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  if (!post) return null;
+    if (!post) return null;
 
-  const repliesWithCounts = await Promise.all(
-    post.replies.map(async (reply) => ({
-      ...reply,
-      likesCount: await getLikesCount(reply.id),
-      repliesCount: await getRepliesCount(reply.id),
-    })),
-  );
+    const repliesWithCounts = await Promise.all(
+      post.replies.map(async (reply) => ({
+        ...reply,
+        likesCount: await getLikesCount(reply.id),
+        repliesCount: await getRepliesCount(reply.id),
+      })),
+    );
 
-  return {
-    ...post,
-    likesCount: await getLikesCount(post.id),
-    repliesCount: await getRepliesCount(post.id),
-    replies: repliesWithCounts,
-  };
+    return {
+      ...post,
+      likesCount: await getLikesCount(post.id),
+      repliesCount: await getRepliesCount(post.id),
+      replies: repliesWithCounts,
+    };
+  } catch (error) {
+    console.error("Error getting post with replies:", error);
+    return null;
+  }
 };
 
 /**
@@ -258,30 +323,40 @@ const getPostWithReplies = async (id: string) => {
  * @returns Deleted post object or null if not found
  */
 const removePost = async (post: string) => {
-  const removedPosts = await db
-    .delete(posts)
-    .where(eq(posts.id, post))
-    .returning();
+  try {
+    const removedPosts = await db
+      .delete(posts)
+      .where(eq(posts.id, post))
+      .returning();
 
-  if (!removedPosts) return null;
+    if (!removedPosts) return null;
 
-  return removedPosts[0];
+    return removedPosts[0];
+  } catch (error) {
+    console.error("Error removing post:", error);
+    return null;
+  }
 };
 
 /**
  * Creates a new like on a post
  * @param user - ID of the user liking the post
  * @param post - ID of the post being liked
- * @returns Created like object
+ * @returns Created like object or null if error occurs
  */
 const addLike = async (user: string, post: string) => {
-  const [like] = await db
-    .insert(likes)
-    .values({ user, post })
-    .onConflictDoNothing()
-    .returning();
+  try {
+    const [like] = await db
+      .insert(likes)
+      .values({ user, post })
+      .onConflictDoNothing()
+      .returning();
 
-  return like;
+    return like;
+  } catch (error) {
+    console.error("Error adding like:", error);
+    return null;
+  }
 };
 
 /**
@@ -291,51 +366,66 @@ const addLike = async (user: string, post: string) => {
  * @returns Removed like object or null if not found
  */
 const removeLike = async (user: string, post: string) => {
-  const removedLikes = await db
-    .delete(likes)
-    .where(and(eq(likes.user, user), eq(likes.post, post)))
-    .returning();
+  try {
+    const removedLikes = await db
+      .delete(likes)
+      .where(and(eq(likes.user, user), eq(likes.post, post)))
+      .returning();
 
-  if (!removedLikes) return null;
+    if (!removedLikes) return null;
 
-  return removedLikes[0];
+    return removedLikes[0];
+  } catch (error) {
+    console.error("Error removing like:", error);
+    return null;
+  }
 };
 
 /**
  * Checks if a user has liked a specific post
  * @param user - User's unique identifier
  * @param post - Post's unique identifier
- * @returns Boolean indicating if the post is liked by the user
+ * @returns Boolean indicating if the post is liked by the user or false if error occurs
  */
 const getLikeStatus = async (user: string, post: string) => {
-  const like = await db.query.likes.findFirst({
-    where: (likes, { and, eq }) =>
-      and(eq(likes.user, user), eq(likes.post, post)),
-  });
+  try {
+    const like = await db.query.likes.findFirst({
+      where: (likes, { and, eq }) =>
+        and(eq(likes.user, user), eq(likes.post, post)),
+    });
 
-  return !!like;
+    return !!like;
+  } catch (error) {
+    console.error("Error getting like status:", error);
+    return false;
+  }
 };
 
 /**
  * Creates a new session for a user
  * @param user - ID of the user creating the session
  * @param device - User agent or device information
- * @returns Created session object with token
+ * @returns Created session object with token or null if error occurs
  */
 const addSession = async (user: string, device: string) => {
-  const token = generateRandomToken(32);
+  try {
+    const token = generateRandomToken(32);
 
-  const [session] = await db
-    .insert(sessions)
-    .values({
-      user: user,
-      token,
-      device,
-      lastActive: new Date(),
-    })
-    .returning();
+    const [session] = await db
+      .insert(sessions)
+      .values({
+        user: user,
+        token,
+        device,
+        lastActive: new Date(),
+      })
+      .returning();
 
-  return session;
+    return session;
+  } catch (error) {
+    console.error("Error adding session:", error);
+    return null;
+  }
 };
 
 /**
@@ -345,34 +435,44 @@ const addSession = async (user: string, device: string) => {
  * @returns Updated session object or null if not found
  */
 const updateSession = async (id: string, device: string) => {
-  const updatedSessions = await db
-    .update(sessions)
-    .set({
-      lastActive: new Date(),
-      device,
-    })
-    .where(eq(sessions.id, id))
-    .returning();
+  try {
+    const updatedSessions = await db
+      .update(sessions)
+      .set({
+        lastActive: new Date(),
+        device,
+      })
+      .where(eq(sessions.id, id))
+      .returning();
 
-  if (!updatedSessions) return null;
+    if (!updatedSessions) return null;
 
-  return updatedSessions[0];
+    return updatedSessions[0];
+  } catch (error) {
+    console.error("Error updating session:", error);
+    return null;
+  }
 };
 
 /**
- * Retrieves a session by its token
+ * Retrieves a session by its id
  * @param id - Unique session identifier
  * @returns Session object or null if not found
  */
 const getSessionWithUser = async (id: string) => {
-  const session = await db.query.sessions.findFirst({
-    where: (sessions, { eq }) => eq(sessions.id, id),
-    with: {
-      user: true,
-    },
-  });
+  try {
+    const session = await db.query.sessions.findFirst({
+      where: (sessions, { eq }) => eq(sessions.id, id),
+      with: {
+        user: true,
+      },
+    });
 
-  return session || null;
+    return session || null;
+  } catch (error) {
+    console.error("Error getting session with user:", error);
+    return null;
+  }
 };
 
 /**
@@ -381,35 +481,51 @@ const getSessionWithUser = async (id: string) => {
  * @returns Deleted session object or null if not found
  */
 const removeSession = async (id: string) => {
-  const [session] = await db
-    .delete(sessions)
-    .where(eq(sessions.id, id))
-    .returning();
+  try {
+    const [session] = await db
+      .delete(sessions)
+      .where(eq(sessions.id, id))
+      .returning();
 
-  return session || null;
+    return session || null;
+  } catch (error) {
+    console.error("Error removing session:", error);
+    return null;
+  }
 };
 
 /**
- * Gets all active sessions for a user
+ * Gets all sessions for a user
  * @param user - User's unique identifier
- * @returns Array of session objects
+ * @returns Array of session objects or an empty array if not found
  */
 const getUserSessions = async (user: string) => {
-  const userSessions = await db.query.sessions.findMany({
-    where: (sessions, { eq }) => eq(sessions.user, user),
-    orderBy: [desc(sessions.lastActive)],
-  });
+  try {
+    const userSessions = await db.query.sessions.findMany({
+      where: (sessions, { eq }) => eq(sessions.user, user),
+      orderBy: [desc(sessions.lastActive)],
+    });
 
-  return userSessions;
+    return userSessions;
+  } catch (error) {
+    console.error("Error getting user sessions:", error);
+    return [];
+  }
 };
 
 /**
  * Remove all sessions for a user
  * @param user - User's unique identifier
- * @returns Deleted session objects
+ * @returns True if successful, false otherwise
  */
 const removeUserSessions = async (user: string) => {
-  await db.delete(sessions).where(eq(sessions.user, user));
+  try {
+    await db.delete(sessions).where(eq(sessions.user, user));
+    return true;
+  } catch (error) {
+    console.error("Error removing user sessions:", error);
+    return false;
+  }
 };
 
 export {

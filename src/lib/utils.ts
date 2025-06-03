@@ -114,13 +114,16 @@ export function getDeviceInfo(headers: Headers) {
     headers.get("user-agent") ?? "",
   );
 
+  // limit to 255 chars
   const deviceInfo = [
     [device.vendor, device.model].filter(Boolean).join(" "),
     [os.name, os.version].filter(Boolean).join(" "),
     [browser.name, browser.version].filter(Boolean).join(" "),
   ]
     .filter(Boolean)
-    .join(" · ");
+    .join(" · ")
+    .trim()
+    .slice(0, 255);
 
   return deviceInfo || "Unknown Device";
 }

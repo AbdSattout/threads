@@ -76,6 +76,8 @@ const signIn = async (token: string): Promise<AuthenticationResult> => {
 
   const session = await addSession(user.id, deviceInfo);
 
+  if (!session) return { ok: false, msg: "Failed to create session." };
+
   const cookies = await getCookies();
   cookies.set(SESSION_ID_COOKIE, session.id);
   cookies.set(SESSION_TOKEN_COOKIE, session.token);

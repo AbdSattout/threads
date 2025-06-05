@@ -112,7 +112,7 @@ const POST = async (req: NextRequest) => {
 
       await sendMessage(
         chatId,
-        `✅ Your profile info has been synced with Threads.`,
+        `✅ Your profile info has been synced with ${bold("Threads")}.`,
       );
       break;
     }

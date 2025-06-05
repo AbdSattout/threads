@@ -60,55 +60,6 @@ export function code(
 }
 
 /**
- * Formats text as a preformatted block using HTML <pre> tags
- * @param text - Text to format or template literal
- * @param values - Values to interpolate if using template literal
- * @returns Preformatted text block
- * @example pre("Multi\nline\ntext")
- * @example pre`Output:\n${result}`
- */
-export function pre(text: string): string;
-export function pre(
-  strings: TemplateStringsArray,
-  ...values: unknown[]
-): string;
-export function pre(
-  strings: TemplateStringsArray | string,
-  ...values: unknown[]
-): string {
-  if (typeof strings === "string") {
-    return `<pre>${strings}</pre>`;
-  }
-  return pre(html(strings, values));
-}
-
-/**
- * Formats text as a preformatted code block with language syntax highlighting
- * @param lang - Programming language identifier
- * @param text - Code text or template literal
- * @param values - Values to interpolate if using template literal
- * @returns Language-specific code block
- * @example preCode("javascript", "console.log('Hello');")
- * @example preCode("json", `${JSON.stringify(data, null, 2)}`)
- */
-export function preCode(lang: string, text: string): string;
-export function preCode(
-  lang: string,
-  strings: TemplateStringsArray,
-  ...values: unknown[]
-): string;
-export function preCode(
-  lang: string,
-  strings: TemplateStringsArray | string,
-  ...values: unknown[]
-): string {
-  if (typeof strings === "string") {
-    return `<pre><code class="language-${lang}">${strings}</code></pre>`;
-  }
-  return preCode(lang, html(strings, values));
-}
-
-/**
  * Formats text as a blockquote using HTML <blockquote> tags
  * @param text - Text to format or template literal
  * @param values - Values to interpolate if using template literal

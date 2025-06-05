@@ -1,6 +1,6 @@
 import { env } from "@/env";
 import { MessageOptions } from "@/lib/definitions";
-import { expandableBlockquote, normal, pre } from "@/lib/tg-format";
+import { bold, expandableBlockquote, normal } from "@/lib/tg-format";
 import { clsx, type ClassValue } from "clsx";
 import { userAgentFromString } from "next/server";
 import { twMerge } from "tailwind-merge";
@@ -114,7 +114,6 @@ export function getDeviceInfo(headers: Headers) {
     headers.get("user-agent") ?? "",
   );
 
-  // limit to 255 chars
   const deviceInfo = [
     [device.vendor, device.model].filter(Boolean).join(" "),
     [os.name, os.version].filter(Boolean).join(" "),
@@ -123,7 +122,7 @@ export function getDeviceInfo(headers: Headers) {
     .filter(Boolean)
     .join(" · ")
     .trim()
-    .slice(0, 255);
+    .slice(0, 255); // Limit to 255 chars
 
   return deviceInfo || "Unknown Device";
 }
@@ -163,11 +162,11 @@ export function getLoginInfo(headers: Headers, token: string) {
   const deviceInfo = getDeviceInfo(headers);
 
   return expandableBlockquote(
-    pre(
+    bold("Device: ") +
       normal`${deviceInfo}\n` +
-        normal`IP: ${ip || "Unknown"}\n` +
-        normal`Location: ${location}\n` +
-        normal`Token: ${token}`,
-    ),
+      bold("IP: ") +
+      normal`${ip || "Unknown"} (${location})\n` +
+      bold("Token: ") +
+      normal`${token}`,
   );
 }

@@ -86,7 +86,8 @@ const signIn = async (token: string): Promise<AuthenticationResult> => {
   after(async () => {
     await sendMessage(
       parseInt(user.id, 16),
-      `✅ You've successfully logged in to ${bold("Threads")}!\n\n${info}`,
+      `✅ You've successfully logged in to ${bold("Threads")}!\n\n` +
+        `${bold("Login info:")}\n${info}`,
     );
 
     await revokeToken(token);

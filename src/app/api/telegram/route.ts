@@ -2,6 +2,7 @@ import { env } from "@/env";
 import {
   addUser,
   generateToken,
+  getUser,
   removeUserSessions,
   updateUser,
 } from "@/lib/db";
@@ -66,7 +67,7 @@ const POST = async (req: NextRequest) => {
 
     case "/auth":
     case "/start auth": {
-      const user = await addUser(id, name);
+      const user = (await getUser(id)) || (await addUser(id, name));
 
       if (!user) {
         await sendMessage(chatId, `🔴 Failed to create an account for you.`);
